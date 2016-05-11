@@ -1,0 +1,391 @@
+// Project 3 - Loïc Perez
+
+Hero myHero1;
+Creature myCreature2;
+Bird myBird;
+Gold myGold;
+
+Button myButton1;
+Button myButton2;
+
+int button1X = 650, button1Y = 450, buttonSize = 80;
+int button2X = 750, button2Y = 450;
+
+boolean buttonOver1 = false;
+boolean buttonOver2 = false;
+
+float sunX = 100;
+float sunY = random(10, 210);
+
+float xBuddy=400, yBuddy=200, hBuddy=100, wBuddy=100;
+float xSpyder = 350, ySpyder = 250, hSpyder = 50, wSpyder = 50;
+float xBird = 10, yBird = 50, wBird = 15, hBird = 15, speedBird = 1;
+float xGold = 400, yGold = 250, wGold = 25, hGold = 15;
+
+float xBird2 = xBird + 30;
+float yBird3;
+
+float speed = 0.5;
+float point;
+int   score = 0;
+
+float horizon;
+
+// ladder
+int i,j;
+
+// monkey
+float monkeyX = 900, monkeyY = 290;
+float rightArm = monkeyX + 30, leftArm = monkeyX - 30;
+float armLengthR = 40, armLengthL = 40;
+float legLengthR = 40, legLengthL = 40;
+int count = 1;
+
+void setup() {
+  size(960, 640);
+
+  horizon = height/3;
+
+  myHero1 = new Hero(color(200, 255, 180), xBuddy, yBuddy, wBuddy, hBuddy);
+  myCreature2 = new Creature(xSpyder, ySpyder, wSpyder, hSpyder);
+  myBird = new Bird(color(0),xBird, yBird, wBird, hBird, speedBird);
+  myGold = new Gold(color(255, 255, 15), xGold, yGold, wGold, hGold);
+
+  myButton1 = new Button(color(100,100,100),button1X, button1Y, buttonSize);
+  myButton2 = new Button(color(100,100,100),button2X, button2Y, buttonSize);
+}
+
+void draw() {
+  scene();  // Sky, floor, tree, house, Sun + movement!
+  myHero1.display();
+  myCreature2.display();
+  myGold.display();
+  ladder();
+  monkey();
+  myButton1.display();
+  myButton2.display();
+  update();
+  text();
+}
+
+void scene() {
+  fill(10, 85, 255);
+  rect(0, 0, width, height/3);        // Sky
+  fill(150, 255, 15);
+  rect(0, height/3, width, height);      // Floor
+
+  // Sun
+  fill(255, 255, 10);
+  ellipse(sunX, sunY, 20, 20);
+
+  // Tree
+  fill(175, 155, 15);
+  rect(width/6, (height/3)-60, 20, 60);      // trunk
+  fill(15, 255, 15);
+  ellipse((width/6)+10, (height/3)-75, 50, 50);   // leaves
+
+  // House
+  fill(255, 15, 15);
+  rect((width/4)-40, (height/3)-60, 100, 60); 
+  triangle((width/4)-40, (height/3)-60, 250, 120, 300, (height/3)-60); // Roof
+  fill((width/4)-65, (height/3)-65, 15);
+  rect((width/4)-30, (height/3)-50, 30, 20);               // Window 1
+  line((width/4)-15, (height/3)-50, (width/4)-15, (height/3)-30);
+  line((width/4)-30, (height/3)-40, width/4, (height/3)-40);
+  rect((width/4)-5, (height/3)-80, 30, 15);               // Window 2
+  line((width/4)+10, (height/3)-80, (width/4)+10, (height/3)-65);
+  line((width/4)-5, (height/3)-72, (width/4)+25, (height/3)-72);
+  rect((width/4)+20, (height/3)-45, 30, 45);               // Door
+  fill(0);
+  ellipse((width/4)+45, (height/3)-20, 5, 5);              // `Door opening`
+
+  // Movement sun
+  sunX = sunX + speed;
+
+  // Reset sun
+  if (sunX > width) sunX = 0;
+}
+
+class Hero {
+
+  color c;
+  float xBuddy;
+  float yBuddy;
+  float wBuddy;
+  float hBuddy;
+
+  Hero(color tempC, float tempXBuddy, float tempYBuddy, float tempWBuddy, float tempHBuddy) {
+    c = tempC;
+    xBuddy = tempXBuddy;
+    yBuddy = tempYBuddy;
+    wBuddy = tempWBuddy;
+    hBuddy = tempHBuddy;
+  }
+
+  // Creatures
+  void display() {
+    // Buddy
+    strokeWeight(3); 
+    fill(200, 255, 180);
+    ellipse(xBuddy, yBuddy, hBuddy, wBuddy);            // head
+    fill(100, 255, 255);
+    ellipse(xBuddy+20, yBuddy-10, hBuddy/4, hBuddy/4);  // eye
+    line (xBuddy-25, yBuddy-10, xBuddy-5, yBuddy-10);   // eye
+    fill(255, 100, 100);
+    triangle(xBuddy-15, yBuddy+20, xBuddy, yBuddy+5, xBuddy+15, yBuddy+20); // nose
+    rect(xBuddy-50, yBuddy+50, 100, 30);     // body
+    line(xBuddy-30, yBuddy+80, xBuddy-30, yBuddy+100); // leg
+    line(xBuddy+30, yBuddy+80, xBuddy+30, yBuddy+100); // leg
+
+    // Movement Buddy to the gold
+    xBuddy =  xBuddy  +  (myGold.xGold-xBuddy) / 15;
+    yBuddy =  yBuddy  +  (myGold.yGold-yBuddy) / 15;
+  }
+}
+
+class Bird {
+
+  color c;
+  float xBird;
+  float yBird;
+  float wBird;
+  float hBird;
+  float speedBird;
+
+  Bird(color tempC,float tempXBird, float tempYBird, float tempWBird, float tempHBird, float tempspeedBird) {
+    c = tempC;
+    xBird = tempXBird;
+    yBird = tempYBird;
+    wBird = tempWBird;
+    hBird = tempHBird;
+    speedBird = tempspeedBird;
+  }
+
+  // Bird
+  
+  void display() {
+    // Bird
+    fill(0);
+    triangle(xBird, yBird, xBird2, yBird, xBird, yBird3); 
+   
+    // Movement Bird from the left to the right 
+    xBird =  xBird  + speedBird ; xBird2 = xBird2 + speedBird; 
+    
+    if (xBird < width/2) {
+      yBird3 = yBird - 30;
+    } else if (xBird > width/2) {
+      yBird3 = yBird + 30;
+    }
+  }
+}
+
+class Creature {
+
+  float xSpyder;
+  float ySpyder;
+  float wSpyder;
+  float hSpyder;
+
+  Creature(float tempXSpyder, float tempYSpyder, float tempWSpyder, float tempHSpyder) {
+    xSpyder = tempXSpyder;
+    ySpyder = tempYSpyder;
+    wSpyder = tempWSpyder;
+    hSpyder = tempHSpyder;
+  }
+
+  // Spyder
+  void display() {
+    strokeWeight(3);
+    stroke(255, 0, 0);
+    fill(0);
+    ellipse(xSpyder, ySpyder, wSpyder, hSpyder);
+    fill(255);
+    ellipse(xSpyder-(wSpyder/2), ySpyder, wSpyder/2, hSpyder/2);
+    line(xSpyder+15, ySpyder-20, xSpyder+30, ySpyder-50);
+    line(xSpyder+15, ySpyder+20, xSpyder+30, ySpyder+50);
+    line(xSpyder-15, ySpyder+20, xSpyder-30, ySpyder+50);
+    line(xSpyder-15, ySpyder-20, xSpyder-30, ySpyder-50);
+    line(xSpyder-35, ySpyder-10, xSpyder-40, ySpyder-20);
+    line(xSpyder-33, ySpyder+10, xSpyder-40, ySpyder+20);
+
+    // Movement Spyder to Buddy
+    xSpyder =  xSpyder  +  (myHero1.xBuddy-xSpyder) / 50;
+    ySpyder =  ySpyder  +  (myHero1.yBuddy-ySpyder) / 50;
+  }
+}
+
+
+class Gold {
+
+  color c;
+  float xGold;
+  float yGold;
+  float wGold;
+  float hGold;
+
+  Gold(color tempC, float tempXGold, float tempYGold, float tempWGold, float tempHGold) {
+    c = tempC;
+    xGold = tempXGold;
+    yGold = tempYGold;
+    wGold = tempWGold;
+    hGold = tempHGold;
+  }
+
+  void display() {
+    // Gold
+    strokeWeight(1);
+    stroke(0);
+    fill(255, 255, 15);
+    ellipse(xGold, yGold, wGold, hGold);
+
+    // Moving gold
+    if (dist(xGold, yGold, myHero1.xBuddy, myHero1.yBuddy) < 10) {
+      xGold = random(1, width);
+      yGold = random(horizon, height);
+      score += 100;
+    }
+  }
+}
+
+void text() {
+  // Text
+  fill(0);
+  text( "Perez Loic", 15, 15);
+  text( "Project #1", 15, 30);
+  text("Score:" + score, 15, 45);
+  text("Press 'u' to go up & 'd' to go down", 15, 60);
+  text("Buddy", myHero1.xBuddy-15, myHero1.yBuddy+68);   // Hero`s name
+  textSize(15);
+  text("Up", 680, 500);
+  text("Down", 770, 500);
+}
+
+void score() {
+  // Reduce the score
+  frameRate(30);
+  score -= 1;
+}
+
+void ladder() {
+  int i = 50;
+  int j = 860;
+  strokeWeight(10);
+  stroke(0);
+  
+  while (i < height) {
+  line(width-100, i, width-20, i);
+  i = i + 50;
+  } 
+  
+  while (j < width) {
+  line(j, 0, j, height);
+  j = j + 80;
+  }
+}
+
+void monkey() {
+  fill(139,69,19);
+  strokeWeight(0.5);
+  // Body
+  ellipse(monkeyX, monkeyY, 70,100);
+  // Head
+  ellipse(monkeyX, monkeyY -50, 30,30);
+  // Arms
+  stroke(139,69,19);
+  strokeWeight(3);
+  line(monkeyX, monkeyY, rightArm, monkeyY-armLengthR);
+  line(monkeyX, monkeyY, leftArm, monkeyY-armLengthL);
+  // Legs  
+  line(monkeyX, monkeyY, monkeyX+30, monkeyY+legLengthR);
+  line(monkeyX, monkeyY, monkeyX-30, monkeyY+legLengthL);
+}
+
+void keyPressed() {
+  if (key == 'u') up();
+  if (key == 'd') down();
+}
+
+void up() {
+  if (count >= 1) {
+    monkeyY = monkeyY - 50;
+    armLengthR = 85;
+    armLengthL = 40;
+    legLengthR = 35;
+    legLengthL = 60;
+    count = 0;
+  } else if (count == 0) {
+    monkeyY = monkeyY - 50;
+    armLengthL = 85;
+    armLengthR = 40;
+    legLengthR = 60;
+    legLengthL = 35;
+    count = 1;
+  }
+}
+
+void down() {
+  if (count >= 1) {
+    monkeyY = monkeyY + 50;
+    armLengthL = 85;
+    armLengthR = 40;
+    legLengthR = 60;
+    legLengthL = 35;
+    count = 0;
+  } else if (count == 0) {
+    monkeyY = monkeyY + 50;
+    armLengthR = 85;
+    armLengthL = 40;
+    legLengthR = 35;
+    legLengthL = 60;
+    count = 1;
+  }
+}
+
+class Button {
+
+  color c;
+  int button1X;
+  int button1Y;
+  int buttonSize;
+
+  Button(color tempC, int temp1X, int temp1Y, int tempSize) {
+
+    c = tempC;
+    button1X = temp1X;
+    button1Y = temp1Y;
+    buttonSize = tempSize;
+  }
+
+  // Button
+  void display() {      
+    stroke(0);
+    fill(180,180,180);
+    rect(button1X, button1Y, buttonSize, buttonSize);
+  }
+}
+
+void mousePressed() {
+  if (buttonOver1) {
+    up();
+  } else if (buttonOver2) {
+    down();
+  }
+}
+
+void update() {
+  if         ( overButton  (button1X, button1Y, buttonSize, buttonSize) ) {
+      buttonOver1 = true;
+      buttonOver2 = false;
+  } else if  ( overButton  (button2X, button2Y, buttonSize, buttonSize) )  {
+      buttonOver1 = false;
+      buttonOver2 = true;
+  }
+}
+  
+  boolean overButton(int x, int y, int width, int height) {
+  if (mouseX >= x && mouseX <= x+width && mouseY >= y && mouseY <= y+height) {
+    return true;
+  } else {
+    return false;
+  }
+}
